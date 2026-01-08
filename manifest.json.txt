@@ -1,0 +1,9 @@
+{
+  "name": "F1 Racing Game",
+  "short_name": "F1 Racing",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#e10600",
+  "orientation": "portrait"
+}

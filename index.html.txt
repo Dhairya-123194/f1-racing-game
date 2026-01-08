@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>F1 Racing Game PWA</title>  <!-- PWA -->  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e10600">  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    canvas {
+      background: #2a2a2a;
+      border: 3px solid #e10600;
+      touch-action: none;
+    }
+    #ui {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+    }
+    #restart {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      background: #e10600;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 18px;
+    }
+    #cars {
+      position: absolute;
+      bottom: 90px;
+      display: flex;
+      gap: 10px;
+    }
+    .carBtn {
+      width: 40px;
+      height: 80px;
+      border: 2px solid white;
+    }
+  </style></head>
+<body>
+  <div id="ui">Tilt phone to steer | Add to Home Screen to install</div>
+  <canvas id="game" width="360" height="600"></canvas>  <div id="cars">
+    <div class="carBtn" style="background:#e10600" onclick="selectCar('#e10600')"></div>
+    <div class="carBtn" style="background:#00d2be" onclick="selectCar('#00d2be')"></div>
+    <div class="carBtn" style="background:#1e41ff" onclick="selectCar('#1e41ff')"></div>
+  </div>  <div id="restart" onclick="restartGame()">Restart</div>  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    let carColor = "#e10600";
+    let car = { x: 160, y: 480, w: 40, h: 80 };
+    let enemies = [];
+    let score = 0;
+    let gameOver = false;
+    let tilt = 0;
+
+    function selectCar(color) {
+      carColor = color;
+    }
+
+    window.addEventListener("deviceorientation", e => {
+      tilt = e.gamma || 0;
+    });
+
+    function spawnEnemy() {
+      enemies.push({
+        x: Math.random() * 300 + 30,
+        y: -100,
+        w: 40,
+        h: 80,
+        speed: 4 + Math.random() * 2
+      });
+    }
+
+    function drawTrack() {
+      ctx.fillStyle = "#444";
+      ctx.fillRect(80, 0, 200, canvas.height);
+      ctx.strokeStyle = "white";
+      ctx.setLineDash([20, 20]);
+      ctx.beginPath();
+      ctx.moveTo(180, 0);
+      ctx.lineTo(180, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawCar(c, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+    }
+
+    function collision(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      car.x += tilt * 0.15;
+      car.x = Math.max(80, Math.min(car.x, 240));
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTrack();
+      drawCar(car, carColor);
+
+      enemies.forEach((e, i) => {
+        e.y += e.speed;
+        drawCar(e, "#ffffff");
+        if (collision(car, e)) gameOver = true;
+        if (e.y > canvas.height) {
+          enemies.splice(i, 1);
+          score++;
+        }
+      });
+
+      ctx.fillStyle = "white";
+      ctx.fillText("Score: " + score, 10, 20);
+
+      if (gameOver) {
+        document.getElementById("restart").style.display = "block";
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function restartGame() {
+      enemies = [];
+      score = 0;
+      car.x = 160;
+      gameOver = false;
+      document.getElementById("restart").style.display = "none";
+      update();
+    }
+
+    setInterval(spawnEnemy, 1200);
+    update();
+  </script></body>
+</html>Internal Storage → F1Game
